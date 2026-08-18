@@ -6,7 +6,24 @@ const path = require('path');
 const readline = require('readline');
 
 const SOURCE_DIR = path.join(__dirname, '..', '.agents', 'skills');
-const TARGET_DIR = path.join(os.homedir(), '.claude', 'skills');
+
+const AGENTS = [
+  {
+    name: 'Claude Code',
+    baseDir: path.join(os.homedir(), '.claude'),
+    skillsDir: path.join(os.homedir(), '.claude', 'skills'),
+  },
+  {
+    name: 'Codex CLI',
+    baseDir: process.env.CODEX_HOME || path.join(os.homedir(), '.codex'),
+    skillsDir: path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'skills'),
+  },
+  {
+    name: 'Gemini CLI',
+    baseDir: path.join(os.homedir(), '.gemini'),
+    skillsDir: path.join(os.homedir(), '.gemini', 'config', 'skills'),
+  },
+];
 
 function listSkillDirs(dir) {
   return fs
@@ -20,13 +37,11 @@ function ask(rl, question) {
   return new Promise((resolve) => rl.question(question, resolve));
 }
 
-async function resolveOverwrite(rl, skillName, mode) {
+async function resolveOverwrite(rl, label, mode) {
   if (mode.value === 'all') return { proceed: true, mode };
   if (mode.value === 'none') return { proceed: false, mode };
 
-  const answer = (
-    await ask(rl, `  "${skillName}" already exists in ~/.claude/skills — overwrite? (y/n/all/none) `)
-  )
+  const answer = (await ask(rl, `  "${label}" already exists — overwrite? (y/n/all/none) `))
     .trim()
     .toLowerCase();
 
@@ -35,32 +50,20 @@ async function resolveOverwrite(rl, skillName, mode) {
   return { proceed: answer === 'y' || answer === 'yes', mode };
 }
 
-async function main() {
-  if (!fs.existsSync(SOURCE_DIR)) {
-    console.error(`Could not find bundled skills at ${SOURCE_DIR}`);
-    process.exitCode = 1;
-    return;
-  }
+async function installTo(agent, skills, rl, overwriteMode) {
+  fs.mkdirSync(agent.skillsDir, { recursive: true });
 
-  fs.mkdirSync(TARGET_DIR, { recursive: true });
-
-  const skills = listSkillDirs(SOURCE_DIR);
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
-  console.log(`Installing ${skills.length} skill(s) to ${TARGET_DIR}\n`);
-
-  let overwriteMode = { value: 'ask' };
   const installed = [];
   const skipped = [];
 
   for (const skill of skills) {
     const source = path.join(SOURCE_DIR, skill);
-    const target = path.join(TARGET_DIR, skill);
+    const target = path.join(agent.skillsDir, skill);
     const exists = fs.existsSync(target);
 
     let proceed = true;
     if (exists) {
-      const result = await resolveOverwrite(rl, skill, overwriteMode);
+      const result = await resolveOverwrite(rl, `${skill} (${agent.name})`, overwriteMode);
       proceed = result.proceed;
       overwriteMode = result.mode;
     }
@@ -75,12 +78,40 @@ async function main() {
     installed.push(skill);
   }
 
+  return { installed, skipped, overwriteMode };
+}
+
+async function main() {
+  if (!fs.existsSync(SOURCE_DIR)) {
+    console.error(`Could not find bundled skills at ${SOURCE_DIR}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const skills = listSkillDirs(SOURCE_DIR);
+  let detected = AGENTS.filter((agent) => fs.existsSync(agent.baseDir));
+
+  if (!detected.length) {
+    console.log('No known agent config directories detected — defaulting to Claude Code.\n');
+    detected = [AGENTS[0]];
+  }
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  let overwriteMode = { value: 'ask' };
+
+  for (const agent of detected) {
+    console.log(`Installing ${skills.length} skill(s) for ${agent.name} → ${agent.skillsDir}`);
+    const result = await installTo(agent, skills, rl, overwriteMode);
+    overwriteMode = result.overwriteMode;
+
+    if (result.installed.length) console.log(`  Installed: ${result.installed.join(', ')}`);
+    if (result.skipped.length) console.log(`  Skipped: ${result.skipped.join(', ')}`);
+    console.log('');
+  }
+
   rl.close();
 
-  console.log('');
-  if (installed.length) console.log(`Installed: ${installed.join(', ')}`);
-  if (skipped.length) console.log(`Skipped: ${skipped.join(', ')}`);
-  console.log(`\nDone. Skills are available in Claude Code from ${TARGET_DIR}`);
+  console.log(`Done. Detected agents: ${detected.map((a) => a.name).join(', ')}`);
 }
 
 main();
