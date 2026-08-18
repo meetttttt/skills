@@ -1,0 +1,32 @@
+{
+  "name": "mn-skills",
+  "version": "1.0.0",
+  "description": "Install the MN-Skills library (grill-me, prd-frd, clickup, implement, smoke-test, ship, repository-audit) into ~/.claude/skills for Claude Code",
+  "bin": {
+    "mn-skills": "bin/install.js"
+  },
+  "files": [
+    "bin",
+    ".agents/skills"
+  ],
+  "keywords": [
+    "claude-code",
+    "claude",
+    "ai-agent",
+    "skills",
+    "coding-agent"
+  ],
+  "author": "meetttttt",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meetttttt/skills.git"
+  },
+  "homepage": "https://github.com/meetttttt/skills#readme",
+  "bugs": {
+    "url": "https://github.com/meetttttt/skills/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
