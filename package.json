@@ -1,6 +1,6 @@
 {
   "name": "mn-skills",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Install the MN-Skills library (grill-me, prd-frd, clickup, implement, smoke-test, ship, repository-audit) for Claude Code, Codex CLI, and Gemini CLI",
   "bin": {
     "mn-skills": "bin/install.js"

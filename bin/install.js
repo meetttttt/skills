@@ -37,9 +37,16 @@ function ask(rl, question) {
   return new Promise((resolve) => rl.question(question, resolve));
 }
 
+const NON_INTERACTIVE = !(process.stdin.isTTY && process.stdout.isTTY);
+
 async function resolveOverwrite(rl, label, mode) {
   if (mode.value === 'all') return { proceed: true, mode };
   if (mode.value === 'none') return { proceed: false, mode };
+
+  if (NON_INTERACTIVE) {
+    console.log(`  "${label}" already exists — skipping (non-interactive shell; re-run in a terminal to overwrite)`);
+    return { proceed: false, mode };
+  }
 
   const answer = (await ask(rl, `  "${label}" already exists — overwrite? (y/n/all/none) `))
     .trim()
@@ -96,7 +103,10 @@ async function main() {
     detected = [AGENTS[0]];
   }
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const rl = NON_INTERACTIVE ? null : readline.createInterface({ input: process.stdin, output: process.stdout });
+  if (NON_INTERACTIVE) {
+    console.log('Non-interactive shell detected — existing skills will be left untouched (re-run in a terminal to be prompted).\n');
+  }
   let overwriteMode = { value: 'ask' };
 
   for (const agent of detected) {
@@ -109,7 +119,7 @@ async function main() {
     console.log('');
   }
 
-  rl.close();
+  if (rl) rl.close();
 
   console.log(`Done. Detected agents: ${detected.map((a) => a.name).join(', ')}`);
 }
