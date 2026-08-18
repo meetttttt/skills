@@ -7,16 +7,22 @@ See [`.agents/skills/README.md`](.agents/skills/README.md) for the full skill in
 ## Install for Claude Code
 
 ```bash
+npx github:meetttttt/skills
+```
+
+Once published to npm, the shorter form also works:
+
+```bash
 npx mn-skills
 ```
 
-This copies every skill into `~/.claude/skills/`, where Claude Code discovers them automatically. If a skill with the same name already exists there, you'll be prompted before it's overwritten.
+Either way, no cloning required — `npx` fetches the package into a temp cache and runs it. This copies every skill into `~/.claude/skills/`, where Claude Code discovers them automatically. If a skill with the same name already exists there, you'll be prompted before it's overwritten.
 
 No install script, no dependencies — the installer is a small zero-dependency Node script bundled in this package.
 
 ## Updating
 
-Re-run `npx mn-skills` any time to pick up newer versions of the skills. You'll be prompted per-skill (or choose "all"/"none") before anything already installed is overwritten.
+Re-run the same command any time to pick up newer versions of the skills. You'll be prompted per-skill (or choose "all"/"none") before anything already installed is overwritten.
 
 ## License
 
