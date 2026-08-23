@@ -18,6 +18,7 @@ Works across **Antigravity, Gemini CLI, Claude Code, Codex, Cursor, Windsurf**, 
 | [`smoke-test`](#-smoke-test) | Requirement-driven smoke test generation | "create smoke tests", "verify implementation", "write test cases" |
 | [`ship`](#-ship) | Commit, push, and open a GitHub PR | "ship this", "create a PR", "commit and push this" |
 | [`repository-audit`](#-repository-audit) | Full repo / branch / PR audit + PDF report | "audit repo", "code review", "review this PR", "compare branches" |
+| [`software-effort-estimation`](#-software-effort-estimation) | Agile effort estimate + Gantt chart + PDF report from a PRD/Scope doc | "estimate effort", "size this PRD", "how long will this take", "sprint plan" |
 
 ---
 
@@ -37,6 +38,10 @@ grill-me  ──►  prd-frd  ──►  clickup  ──►  implement  ──�
           repository-audit
           (Audit at any stage:
            branch, PR, or full repo)
+
+grill-me  ──►  prd-frd  ──►  software-effort-estimation
+                              (Standalone: size the PRD into an
+                               Agile sprint plan + Gantt chart)
 ```
 
 ---
@@ -247,9 +252,38 @@ repository-audit/
 
 ---
 
+## 📐 software-effort-estimation
+
+**Purpose**: Read a PRD/FRD/Scope document, run an incremental confirmation interview (team composition, seniority, required skills, velocity, contingency), size the work in Agile story points, and produce a Markdown + Quantal AI branded PDF report — including a rendered Gantt chart — with the same visual identity as `repository-audit`.
+
+**Activate when**: User says "estimate effort", "size this PRD", "how long will this take", "sprint plan", or "effort estimate for [feature/project]".
+
+**Key outputs**:
+- `reports/effort-estimate-<project-slug>-YYYY-MM-DD.md` — Markdown report
+- `reports/effort-estimate-<project-slug>-YYYY-MM-DD.pdf` — Quantal AI branded PDF (navy cover, risk-colored epic panels, embedded Gantt chart, page headers/footers)
+
+**Risk/complexity classification** (reuses the audit palette for a different meaning — disclosed explicitly in the report): High (red) → Medium (amber) → Low (teal)
+
+**File structure**:
+```
+software-effort-estimation/
+├── SKILL.md                              ← Main instructions (7-step workflow)
+├── references/
+│   ├── estimation_methodology.md        ← Role taxonomy, story point scale, velocity/contingency defaults, sprint-count formula
+│   ├── interview_flow.md                ← Incremental intake interview structure
+│   └── pdf_visual_system.md             ← Fixed color palette, typography, cover spec, Gantt chart data schema + embedding rules
+├── scripts/
+│   └── generate_gantt_svg.py            ← Pure stdlib Python — renders the Gantt chart as SVG, no pip install required
+└── examples/
+    └── sample_effort_estimate.md        ← Sample epics in correct format across all three risk levels
+```
+📄 [Read full instructions](software-effort-estimation/SKILL.md)
+
+---
+
 ## Universal Rules (apply to all skills)
 
 - All skills are **100% agent-agnostic** — no hardcoded tool calls, no agent name references.
 - All skills default to **read-only** unless the user explicitly requests changes.
-- Every skill is mirrored identically to `~/.gemini/config/skills/` for machine-wide availability.
-- When updating any skill, always update **both** the workspace copy and the global mirror.
+- Install via `npx mn-skills` (or `npx github:meetttttt/skills`), which detects and mirrors every skill identically across Claude Code (`~/.claude/skills/`), Codex CLI (`~/.codex/skills/`), and Gemini CLI (`~/.gemini/config/skills/`) — see the root [README](../../README.md) for details.
+- When updating any skill in this repo, re-run the installer (or manually sync) so all installed agent targets pick up the change.
