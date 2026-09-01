@@ -1,0 +1,45 @@
+{
+  "report_type": "REPOSITORY AUDIT",
+  "cover": {"title": "acme-api", "subtitle": "Quantal AI"},
+  "footer_text": "CONFIDENTIAL - Quantal AI Internal Engineering Review",
+  "metadata_table": [
+    {"label": "Repository", "value": "acme-api"},
+    {"label": "Audited Target", "value": "main branch @ a3f9c12"},
+    {"label": "Date", "value": "2026-09-01"},
+    {"label": "Review Scenario", "value": "Entire repository audit"}
+  ],
+  "sections": [
+    {"type": "heading", "text": "Executive Summary"},
+    {"type": "paragraph", "text": "2 findings across 2 severity levels. One P0 critical release blocker (plaintext password storage). One P2 performance defect. No application code was changed during this review."},
+    {"type": "heading", "text": "Findings"},
+    {
+      "type": "panel",
+      "level": "critical",
+      "title": "[P0] User passwords stored as plaintext in PostgreSQL",
+      "fields": [
+        {"label": "Evidence", "body": "src/auth/user.service.ts:L88 - INSERT stores the plaintext password field directly. No hashing anywhere in the call chain."},
+        {"label": "Blast radius", "body": "All registered users. A single database read exposes all credentials in plaintext, immediately usable without cracking."},
+        {"label": "Remediation", "body": "Hash passwords with bcrypt (cost factor >= 12) before storage. Force reset on next login for existing accounts."},
+        {"label": "Prompt for a coding agent", "style": "quote", "body": "In src/auth/user.service.ts and auth.service.ts, replace plaintext password storage and comparison with bcrypt (cost 12). Add regression tests covering successful login, rejected login, and that the stored password never equals the plaintext input."},
+        {"label": "Smoke test", "style": "list", "items": [
+          "Happy path: register then login with correct credentials returns 200 with a valid session.",
+          "Regression path: SELECT password FROM users WHERE email=... must not equal the plaintext password used at registration."
+        ]}
+      ]
+    },
+    {
+      "type": "panel",
+      "level": "warning",
+      "title": "[P2] N+1 query pattern on /api/projects list endpoint",
+      "fields": [
+        {"label": "Evidence", "body": "src/projects/project.service.ts:L67-L81 - listProjects() calls UserService.findById() inside a loop over all results."},
+        {"label": "Blast radius", "body": "At 200 projects, 201 queries per request. Latency scales linearly with project count."},
+        {"label": "Remediation", "body": "Replace the in-loop lookup with a single JOIN on users, or batch-fetch owner ids with WHERE id = ANY($1)."},
+        {"label": "Smoke test", "style": "list", "items": [
+          "GET /api/projects?page=1&limit=50 responds in under 200ms with owner data embedded.",
+          "Query log confirms exactly 1 SQL query issued, not 51."
+        ]}
+      ]
+    }
+  ]
+}

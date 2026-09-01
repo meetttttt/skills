@@ -25,13 +25,13 @@ Input JSON schema:
 - Any epic or track may set an explicit "color" (hex string) to override the
   default palette mapping.
 - Rows render epics first (ordered by start_sprint), then tracks in the given
-  order, matching pdf_visual_system.md's Y-axis ordering rule.
+  order, matching visual_system.md's Y-axis ordering rule.
 
 Output is a self-contained SVG sized to its own content (label column + sprint
 grid, or the legend row, whichever is wider). It's vector, not raster, so it
-stays crisp at any print DPI — but callers MUST embed it at `width: 100%` of
-the page's content area rather than at its raw pixel size, or the widest rows
-will be clipped. See references/pdf_visual_system.md "Embedding the SVG".
+stays crisp at any print DPI. render_report.py (this skill's renderer) embeds
+it at `width: 100%` of the page's content area automatically — this script
+only needs to produce the SVG.
 """
 
 import argparse

@@ -1,6 +1,6 @@
 # Finding Severity Guide
 
-Qualification rules, severity definitions, and the exact finding format for every `repository-audit` report.
+Qualification rules, severity definitions, and the exact finding format for every `code-review` report.
 
 ---
 

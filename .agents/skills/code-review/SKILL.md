@@ -1,17 +1,28 @@
 ---
-name: repository-audit
+name: code-review
 description: >-
-  Perform an evidence-backed repository, branch, pull-request, or release audit and
-  generate a standardized professional Markdown and PDF report. Use when an agent must
-  review an entire repository, a standalone branch, a branch-to-branch comparison, a
-  PR/commit range, or codebase history for correctness, security, secrets, Git/GitHub
-  exposure, performance, reliability, architecture, modularity, technical debt, and test
-  gaps, including severity, blast radius, implementation prompts, and smoke tests.
+  Perform an evidence-backed repository, branch, pull-request, or release
+  audit and generate a standardized professional Markdown report plus a PDF
+  rendered via the document-generation skill. Use when an agent must review
+  an entire repository, a standalone branch, a branch-to-branch comparison, a
+  PR/commit range, or codebase history for correctness, security, secrets,
+  Git/GitHub exposure, performance, reliability, architecture, modularity,
+  technical debt, and test gaps, including severity, blast radius,
+  implementation prompts, and smoke tests.
 ---
 
-# Repository Audit Skill
+# Code Review Skill
 
-A comprehensive, project-agnostic code review and audit skill. Produces an evidence-backed Markdown report and a standardized professional PDF report for every engagement.
+A comprehensive, project-agnostic code review and audit skill. Produces an
+evidence-backed Markdown report for every engagement, then hands the findings
+to the `document-generation` skill to render the standardized PDF.
+
+**This skill owns review content only — it does not implement PDF layout,
+fonts, or colors.** That is deliberately owned by the separate
+`document-generation` skill, which every report-producing skill shares, so
+every Quantal AI report looks identical regardless of the reviewed repo or
+environment. See [references/manifest_mapping.md](references/manifest_mapping.md)
+for how findings become that skill's input.
 
 ---
 
@@ -232,25 +243,21 @@ least one failure, authorization, regression, or boundary case.
 
 ---
 
-## Step 7 — Standardized Professional PDF Report
+## Step 7 — Render the PDF via document-generation
 
 Output file: `reports/repository-audit-YYYY-MM-DD.pdf`
 
-Generate the PDF from the Markdown report using the fixed visual system defined in [references/pdf_visual_system.md](references/pdf_visual_system.md).
-
-### PDF Validation Checklist (run after generation)
-
-- Verify file creation with `file` or `pdfinfo`
-- Verify correct page size and page count
-- Extract text with `pdftotext` when available to confirm readable content
-- Visually confirm:
-  - Cover page contains **only** project/repository name and `Quantal AI` — nothing else
-  - Headers and footers do not overlap content
-  - Page numbers appear on every interior page
-  - Severity colors are consistent (P0/P1 red, P2 amber, P3 teal)
-  - Margins and typography are consistent
-  - Finding panels and labels are readable
-- Report any PDF-generation or validation blocker clearly
+1. Convert the findings (and the executive summary / metadata) into a
+   `manifest.json` per [references/manifest_mapping.md](references/manifest_mapping.md)
+   — this maps P0/P1 → `level: "critical"`, P2 → `"warning"`, P3 → `"info"`,
+   and each finding's Evidence/Blast radius/Remediation/Prompt/Smoke test into
+   the manifest's panel `fields`.
+2. Invoke the `document-generation` skill with that manifest and the desired
+   output path. Do not render the PDF any other way — this skill has no PDF
+   layout logic of its own by design; all of it lives in `document-generation`
+   so every report type stays visually identical.
+3. Use the validation checklist in `document-generation`'s `SKILL.md` Step 4
+   to confirm the PDF, rather than re-deriving a separate checklist here.
 
 ---
 
@@ -271,6 +278,6 @@ Lead with links to both the Markdown and PDF reports. Then provide:
 
 ## References
 
-- [references/pdf_visual_system.md](references/pdf_visual_system.md) — Fixed color palette, typography, page geometry, cover spec, header/footer spec, and validation checklist.
 - [references/finding_severity_guide.md](references/finding_severity_guide.md) — P0–P3 definitions, qualification rules, and exact finding format template.
+- [references/manifest_mapping.md](references/manifest_mapping.md) — how a finding maps onto a `document-generation` manifest panel.
 - [examples/sample_audit_report.md](examples/sample_audit_report.md) — Sample findings in correct format (P0 through P3).

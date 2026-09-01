@@ -1,0 +1,50 @@
+{
+  "report_type": "EFFORT ESTIMATION",
+  "cover": {"title": "Loyalty Rewards Revamp", "subtitle": "Quantal AI"},
+  "footer_text": "CONFIDENTIAL - Quantal AI Internal Engineering Estimate",
+  "metadata_table": [
+    {"label": "Project", "value": "Loyalty Rewards Revamp"},
+    {"label": "Source Document", "value": "docs/PRD_loyalty_rewards.md"},
+    {"label": "Date", "value": "2026-08-23"},
+    {"label": "Sprint Length", "value": "2 weeks (confirmed with user)"}
+  ],
+  "sections": [
+    {"type": "heading", "text": "Executive Summary"},
+    {"type": "paragraph", "text": "3 epics extracted, 23 story points total. Confirmed team: 1 Senior Backend, 2 Mid Frontend. Dev timeline: 2 sprints. Total timeline including QA and deployment: 4 sprints."},
+    {"type": "disclosure", "text": "Red/amber/teal below denote estimation complexity/risk in this report, not bug severity."},
+    {"type": "heading", "text": "Epic Breakdown"},
+    {
+      "type": "panel",
+      "level": "critical",
+      "title": "Real-time points ledger with idempotent reconciliation",
+      "fields": [
+        {"label": "Scope", "body": "Build a real-time ledger service that credits/debits loyalty points on purchase and refund events, with exactly-once processing across duplicate webhook deliveries."},
+        {"label": "Story points", "body": "13 - large feature, multiple services, significant unknowns."},
+        {"label": "Rationale", "body": "New event-sourced ledger pattern, external dependency on the payments webhook provider's delivery guarantees."},
+        {"label": "Assigned sprint(s)", "body": "Sprint 1-2, owned by Senior Backend."}
+      ]
+    },
+    {
+      "type": "panel",
+      "level": "info",
+      "title": "Loyalty tier badge on user profile page",
+      "fields": [
+        {"label": "Scope", "body": "Display the user's current loyalty tier as a badge on the existing profile page."},
+        {"label": "Story points", "body": "2 - small, well-understood, one component."},
+        {"label": "Rationale", "body": "Pure frontend display change against an already-exposed field."},
+        {"label": "Assigned sprint(s)", "body": "Sprint 1, owned by 1 Mid Frontend."}
+      ]
+    },
+    {"type": "heading", "text": "Sprint Plan"},
+    {"type": "chart", "chart_type": "gantt", "svg_path": "gantt.svg", "caption": "Epics and non-dev tracks by sprint"},
+    {"type": "heading", "text": "Assumptions Log"},
+    {
+      "type": "table",
+      "headers": ["Item", "Value", "Status"],
+      "rows": [
+        ["Sprint length", "2 weeks", "Confirmed by user"],
+        ["Contingency", "15%", "Default, confirmed by user"]
+      ]
+    }
+  ]
+}

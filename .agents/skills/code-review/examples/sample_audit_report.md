@@ -1,6 +1,6 @@
 # Sample Audit Report — Finding Examples
 
-This document shows one finding at each severity level (P0 through P3) using the exact required format. Use these as reference when generating a `repository-audit` report.
+This document shows one finding at each severity level (P0 through P3) using the exact required format. Use these as reference when generating a `code-review` report.
 
 ---
 
