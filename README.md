@@ -1,6 +1,6 @@
 # MN-Skills — AI Coding Agent Skills Library
 
-A collection of project-agnostic, vendor-neutral skills for AI coding agents — `grill-me`, `prd-frd`, `clickup`, `implement`, `smoke-test`, `ship`, `repository-audit`, and `software-effort-estimation`. Works across Claude Code, Gemini CLI, Codex, Cursor, Windsurf, and any agent that reads markdown instructions.
+A collection of project-agnostic, vendor-neutral skills for AI coding agents — `grill-me`, `prd-frd`, `clickup`, `implement`, `smoke-test`, `ship`, `code-review`, `software-effort-estimation`, and `document-generation`. Works across Claude Code, Gemini CLI, Codex, Cursor, Windsurf, and any agent that reads markdown instructions.
 
 See [`.agents/skills/README.md`](.agents/skills/README.md) for the full skill index, workflow chain, and detailed docs per skill.
 

@@ -2,19 +2,21 @@
 name: software-effort-estimation
 description: >-
   Produce an evidence-backed Agile effort estimate from a PRD/Scope document and
-  generate a standardized professional Markdown and PDF report, including a rendered
-  Gantt chart. Use when an agent must read a PRD/FRD/Scope document, confirm team
-  composition, seniority, and required skills with the user, size the work in story
-  points, convert it to a sprint-based timeline, and report the plan with the same
-  visual identity as the repository-audit skill.
+  generate a standardized professional Markdown report plus a PDF (including a
+  rendered Gantt chart) via the document-generation skill. Use when an agent must
+  read a PRD/FRD/Scope document, confirm team composition, seniority, and required
+  skills with the user, size the work in story points, convert it to a sprint-based
+  timeline, and report the plan with the same visual identity as every other
+  Quantal AI report.
 ---
 
 # Software Effort Estimation Skill
 
 A project-agnostic Agile effort estimation skill. Reads a PRD/Scope document, runs an
 incremental confirmation interview with the user, sizes the work, and produces an
-evidence-backed Markdown report plus a standardized professional PDF report (with a
-Gantt chart) for every engagement.
+evidence-backed Markdown report. The PDF (with a rendered Gantt chart) is rendered by
+the separate `document-generation` skill — this skill owns estimation content only,
+not PDF layout, fonts, or colors.
 
 This skill assumes **Agile delivery** (story points, sprints, iterative epics) — never
 produce a Waterfall-style single critical-path schedule.
@@ -81,26 +83,26 @@ explicitly overridden by the user).
 
 ## Step 5 — Generate the Gantt Chart
 
-Use the bundled script — **do not hand-write chart code.** Freeform chart generation is
-what made earlier reports unreliable (missing rows, clipped columns, garbled text); the
-script is tested and fixes those failure modes structurally.
+Use the `document-generation` skill's bundled script — **do not hand-write chart
+code.** Freeform chart generation is what made earlier reports unreliable (missing
+rows, clipped columns, garbled text); the script is tested and fixes those failure
+modes structurally.
 
 1. Build `gantt_data.json` from the sized epics and confirmed non-dev tracks, matching
-   the schema documented in
-   [references/pdf_visual_system.md](references/pdf_visual_system.md) "Gantt Chart
-   Generation" section.
+   the "Gantt chart data" schema documented in
+   [document-generation's manifest_schema.md](../document-generation/references/manifest_schema.md).
 2. Run:
    ```
-   python3 scripts/generate_gantt_svg.py --input gantt_data.json --output gantt.svg
+   python3 ../document-generation/scripts/generate_gantt_svg.py --input gantt_data.json --output gantt.svg
    ```
    This is pure Python standard library — no `pip install` required, so it cannot fail
    due to a missing dependency.
-3. Embed the resulting SVG into the report HTML exactly as documented in
-   `pdf_visual_system.md` (UTF-8 charset + full-width scaling are both required — see
-   that doc for why).
+3. Reference the resulting SVG in the manifest's `chart` section (Step 7) —
+   `document-generation`'s renderer handles embedding, scaling, and framing; there is
+   nothing further to do here.
 4. If step 2 fails for a reason other than malformed input (e.g. `python3` unavailable
-   in the environment), fall back to a markdown table (epics × sprint columns) and state
-   the blocker clearly — do not silently omit the Gantt chart.
+   in the environment), fall back to a markdown table (epics × sprint columns) in the
+   Markdown report and state the blocker clearly — do not silently omit the Gantt chart.
 
 ---
 
@@ -149,28 +151,23 @@ external dependency, ambiguity, or lack thereof.
 
 ---
 
-## Step 7 — Standardized Professional PDF Report
+## Step 7 — Render the PDF via document-generation
 
 Output file: `reports/effort-estimate-<project-slug>-YYYY-MM-DD.pdf`
 
-Generate the PDF from the Markdown report using the fixed visual system defined in
-[references/pdf_visual_system.md](references/pdf_visual_system.md) — identical palette,
-cover page, header/footer, and page geometry to the `repository-audit` skill's reports,
-plus the embedded Gantt chart.
-
-### PDF Validation Checklist (run after generation)
-
-- Verify file creation with `file` or `pdfinfo`.
-- Verify correct page size and page count.
-- Extract text with `pdftotext` when available to confirm readable content.
-- Visually confirm:
-  - Cover page contains **only** the project/initiative name and `Quantal AI` — nothing else.
-  - Headers and footers do not overlap content.
-  - Page numbers appear on every interior page.
-  - Risk colors are consistent (High red, Medium amber, Low teal) and match the Gantt chart bar colors.
-  - The Gantt chart is legible and not cut off by a page break.
-  - Margins and typography are consistent.
-- Report any PDF-generation or validation blocker clearly.
+1. Convert the epics, executive summary, and assumptions log into a
+   `manifest.json` per
+   [references/manifest_mapping.md](references/manifest_mapping.md) — this maps
+   High/Medium/Low → `level: "critical"`/`"warning"`/`"info"`, each epic's
+   Scope/Story points/Rationale/Dependencies/Assigned sprint(s) into a panel's
+   `fields`, and includes the Gantt chart SVG from Step 5 as a `chart` section.
+2. Invoke the `document-generation` skill with that manifest and the desired
+   output path. Do not render the PDF any other way — this skill has no PDF
+   layout logic of its own by design; all of it lives in `document-generation`
+   so every report type (this one, code-review, and any future one) stays
+   visually identical.
+3. Use the validation checklist in `document-generation`'s `SKILL.md` Step 4
+   to confirm the PDF, rather than re-deriving a separate checklist here.
 
 ---
 
@@ -194,6 +191,6 @@ unless it actually occurred.
 
 - [references/estimation_methodology.md](references/estimation_methodology.md) — role taxonomy, story point scale, default velocity, contingency rules, risk classification rubric, and the sprint-count formula.
 - [references/interview_flow.md](references/interview_flow.md) — the incremental, grill-me-style intake interview structure.
-- [references/pdf_visual_system.md](references/pdf_visual_system.md) — fixed color palette, typography, page geometry, cover spec, header/footer spec, the `gantt_data.json` schema, and SVG-embedding rules.
-- [scripts/generate_gantt_svg.py](scripts/generate_gantt_svg.py) — pure-stdlib Gantt chart renderer; run this in Step 5, never hand-write chart code.
+- [references/manifest_mapping.md](references/manifest_mapping.md) — how epics and the Gantt chart map onto a `document-generation` manifest.
 - [examples/sample_effort_estimate.md](examples/sample_effort_estimate.md) — sample epics in correct format across all three risk levels, plus a sample executive summary.
+- [document-generation skill](../document-generation/SKILL.md) — owns all PDF rendering (visual system, manifest schema, and the Gantt SVG script used in Step 5).

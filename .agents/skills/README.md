@@ -17,8 +17,9 @@ Works across **Antigravity, Gemini CLI, Claude Code, Codex, Cursor, Windsurf**, 
 | [`implement`](#-implement) | Task-driven feature implementation (PRD/FRD hard-gated) | "implement CU-xxxx", "build the feature from ClickUp task CU-xxxx" |
 | [`smoke-test`](#-smoke-test) | Requirement-driven smoke test generation | "create smoke tests", "verify implementation", "write test cases" |
 | [`ship`](#-ship) | Commit, push, and open a GitHub PR | "ship this", "create a PR", "commit and push this" |
-| [`repository-audit`](#-repository-audit) | Full repo / branch / PR audit + PDF report | "audit repo", "code review", "review this PR", "compare branches" |
-| [`software-effort-estimation`](#-software-effort-estimation) | Agile effort estimate + Gantt chart + PDF report from a PRD/Scope doc | "estimate effort", "size this PRD", "how long will this take", "sprint plan" |
+| [`code-review`](#-code-review) | Full repo / branch / PR audit — findings content only | "audit repo", "code review", "review this PR", "compare branches" |
+| [`software-effort-estimation`](#-software-effort-estimation) | Agile effort estimate + Gantt chart from a PRD/Scope doc | "estimate effort", "size this PRD", "how long will this take", "sprint plan" |
+| [`document-generation`](#-document-generation) | Shared Quantal AI PDF renderer for any report-producing skill | (invoked by `code-review` / `software-effort-estimation`, not directly) |
 
 ---
 
@@ -35,13 +36,18 @@ grill-me  ──►  prd-frd  ──►  clickup  ──►  implement  ──�
                                                 internally)
 
                     ▲
-          repository-audit
+             code-review
           (Audit at any stage:
            branch, PR, or full repo)
 
 grill-me  ──►  prd-frd  ──►  software-effort-estimation
                               (Standalone: size the PRD into an
                                Agile sprint plan + Gantt chart)
+
+code-review  ──►  document-generation
+software-effort-estimation  ──┘
+(Both hand their findings/epics to document-generation,
+ the single shared renderer for the Quantal AI PDF visual system)
 ```
 
 ---
@@ -218,9 +224,9 @@ ship/
 
 ---
 
-## 🔍 repository-audit
+## 🔍 code-review
 
-**Purpose**: Perform a comprehensive, evidence-backed audit of a repository, branch, PR, or commit range. Covers correctness, security, secrets, Git exposure, performance, architecture, and test gaps. Generates both a Markdown report and a standardized Quantal AI branded PDF report.
+**Purpose**: Perform a comprehensive, evidence-backed audit of a repository, branch, PR, or commit range. Covers correctness, security, secrets, Git exposure, performance, architecture, and test gaps. Produces the Markdown report itself, then hands findings to `document-generation` for the PDF — this skill owns review content only, not PDF layout.
 
 **Activate when**: User says "audit repo", "code review", "review this PR", "compare branches", "pre-release audit", or "security review".
 
@@ -234,35 +240,35 @@ ship/
 
 **Key outputs**:
 - `reports/repository-audit-YYYY-MM-DD.md` — Markdown report
-- `reports/repository-audit-YYYY-MM-DD.pdf` — Quantal AI branded PDF (navy cover, severity-colored findings, page headers/footers)
+- `reports/repository-audit-YYYY-MM-DD.pdf` — Quantal AI branded PDF, rendered by `document-generation` (navy cover, severity-colored findings, page headers/footers)
 
 **Finding severities**: P0 (release blocker) → P1 (urgent) → P2 (material defect) → P3 (improvement)
 
 **File structure**:
 ```
-repository-audit/
+code-review/
 ├── SKILL.md                          ← Main instructions (7-step workflow)
 ├── references/
-│   ├── pdf_visual_system.md         ← Fixed color palette, typography, cover spec
-│   └── finding_severity_guide.md    ← P0–P3 definitions + finding format template
+│   ├── finding_severity_guide.md    ← P0–P3 definitions + finding format template
+│   └── manifest_mapping.md          ← How a finding maps onto a document-generation manifest panel
 └── examples/
     └── sample_audit_report.md       ← Sample P0/P1/P2/P3 findings in exact format
 ```
-📄 [Read full instructions](repository-audit/SKILL.md)
+📄 [Read full instructions](code-review/SKILL.md)
 
 ---
 
 ## 📐 software-effort-estimation
 
-**Purpose**: Read a PRD/FRD/Scope document, run an incremental confirmation interview (team composition, seniority, required skills, velocity, contingency), size the work in Agile story points, and produce a Markdown + Quantal AI branded PDF report — including a rendered Gantt chart — with the same visual identity as `repository-audit`.
+**Purpose**: Read a PRD/FRD/Scope document, run an incremental confirmation interview (team composition, seniority, required skills, velocity, contingency), size the work in Agile story points, and produce a Markdown report plus a Gantt chart — the PDF (same Quantal AI visual identity as every other report) is rendered by `document-generation`. This skill owns estimation content only, not PDF layout.
 
 **Activate when**: User says "estimate effort", "size this PRD", "how long will this take", "sprint plan", or "effort estimate for [feature/project]".
 
 **Key outputs**:
 - `reports/effort-estimate-<project-slug>-YYYY-MM-DD.md` — Markdown report
-- `reports/effort-estimate-<project-slug>-YYYY-MM-DD.pdf` — Quantal AI branded PDF (navy cover, risk-colored epic panels, embedded Gantt chart, page headers/footers)
+- `reports/effort-estimate-<project-slug>-YYYY-MM-DD.pdf` — Quantal AI branded PDF, rendered by `document-generation` (navy cover, risk-colored epic panels, embedded Gantt chart, page headers/footers)
 
-**Risk/complexity classification** (reuses the audit palette for a different meaning — disclosed explicitly in the report): High (red) → Medium (amber) → Low (teal)
+**Risk/complexity classification** (reuses the shared palette for a different meaning — disclosed explicitly in the report via a `disclosure` section): High (red) → Medium (amber) → Low (teal)
 
 **File structure**:
 ```
@@ -271,13 +277,39 @@ software-effort-estimation/
 ├── references/
 │   ├── estimation_methodology.md        ← Role taxonomy, story point scale, velocity/contingency defaults, sprint-count formula
 │   ├── interview_flow.md                ← Incremental intake interview structure
-│   └── pdf_visual_system.md             ← Fixed color palette, typography, cover spec, Gantt chart data schema + embedding rules
-├── scripts/
-│   └── generate_gantt_svg.py            ← Pure stdlib Python — renders the Gantt chart as SVG, no pip install required
+│   └── manifest_mapping.md              ← How epics + the Gantt chart map onto a document-generation manifest
 └── examples/
     └── sample_effort_estimate.md        ← Sample epics in correct format across all three risk levels
 ```
 📄 [Read full instructions](software-effort-estimation/SKILL.md)
+
+---
+
+## 📄 document-generation
+
+**Purpose**: The single, shared PDF renderer for every Quantal AI report. Any skill (`code-review`, `software-effort-estimation`, or a future report type) hands it a content-agnostic JSON manifest; it renders the fixed visual system — exact colors, cover page, header/footer, typography, page geometry — via one locked pipeline (`manifest.json` → HTML with embedded CSS → `weasyprint` → PDF). This exists so report layout can never drift by repo or by which PDF tool happens to be installed.
+
+**Activate when**: Invoked by another skill (or the user directly) that already has report content ready and needs it turned into the standardized PDF. It does not gather content itself.
+
+**Key outputs**:
+- `<report>.pdf` rendered from a caller-supplied `manifest.json`
+- Also renders any Gantt chart a manifest references (`scripts/generate_gantt_svg.py`, pure stdlib — no pip install required)
+
+**File structure**:
+```
+document-generation/
+├── SKILL.md                              ← Main instructions (4-step workflow)
+├── references/
+│   ├── visual_system.md                 ← Fixed color palette, typography, page geometry, cover/header/footer spec
+│   └── manifest_schema.md               ← Full JSON manifest field reference (sections, panels, charts, tables, ...)
+├── scripts/
+│   ├── render_report.py                 ← The single fixed manifest-to-PDF renderer
+│   └── generate_gantt_svg.py            ← Pure stdlib Python — renders a Gantt chart section as SVG
+└── examples/
+    ├── sample_manifest_findings.json    ← Worked manifest for a findings-style report (e.g. code-review)
+    └── sample_manifest_gantt.json       ← Worked manifest including a Gantt chart section (e.g. effort estimation)
+```
+📄 [Read full instructions](document-generation/SKILL.md)
 
 ---
 
