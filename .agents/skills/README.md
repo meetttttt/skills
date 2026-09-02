@@ -18,6 +18,7 @@ Works across **Antigravity, Gemini CLI, Claude Code, Codex, Cursor, Windsurf**, 
 | [`smoke-test`](#-smoke-test) | Requirement-driven smoke test generation | "create smoke tests", "verify implementation", "write test cases" |
 | [`ship`](#-ship) | Commit, push, and open a GitHub PR | "ship this", "create a PR", "commit and push this" |
 | [`code-review`](#-code-review) | Full repo / branch / PR audit — findings content only | "audit repo", "code review", "review this PR", "compare branches" |
+| [`hipaa-compliance`](#-hipaa-compliance) | Full-codebase HIPAA compliance audit against a fixed checklist — findings content only | "HIPAA compliance check", "HIPAA audit", "is this codebase HIPAA compliant", "PHI handling review" |
 | [`software-effort-estimation`](#-software-effort-estimation) | Agile effort estimate + Gantt chart from a PRD/Scope doc | "estimate effort", "size this PRD", "how long will this take", "sprint plan" |
 | [`document-generation`](#-document-generation) | Shared Quantal AI PDF renderer for any report-producing skill | (invoked by `code-review` / `software-effort-estimation`, not directly) |
 
@@ -40,13 +41,18 @@ grill-me  ──►  prd-frd  ──►  clickup  ──►  implement  ──�
           (Audit at any stage:
            branch, PR, or full repo)
 
+hipaa-compliance
+(Standalone HIPAA audit — full codebase,
+ run any time, independent of the chain above)
+
 grill-me  ──►  prd-frd  ──►  software-effort-estimation
                               (Standalone: size the PRD into an
                                Agile sprint plan + Gantt chart)
 
-code-review  ──►  document-generation
-software-effort-estimation  ──┘
-(Both hand their findings/epics to document-generation,
+code-review  ────────────────┐
+hipaa-compliance  ───────────┼──►  document-generation
+software-effort-estimation  ─┘
+(All three hand their findings/epics to document-generation,
  the single shared renderer for the Quantal AI PDF visual system)
 ```
 
@@ -255,6 +261,37 @@ code-review/
     └── sample_audit_report.md       ← Sample P0/P1/P2/P3 findings in exact format
 ```
 📄 [Read full instructions](code-review/SKILL.md)
+
+---
+
+## 🏥 hipaa-compliance
+
+**Purpose**: Scan an entire codebase (source, config, IaC, CI/CD, dependency manifests) against a fixed, code-verifiable HIPAA checklist, and produce an evidence-backed compliance report. Auto-detects whether AI/ML components are present before scoring AI-specific risk items. Standalone audit skill, independent of any project — like `code-review`, it owns report content only and hands the PDF to `document-generation`.
+
+**Activate when**: User says "HIPAA compliance check", "HIPAA audit", "is this codebase HIPAA compliant", or "PHI handling review".
+
+**Explicitly out of scope**: Business Associate Agreements. No codebase scan can verify a signed BAA exists — every report includes a dedicated section stating this and placing that verification on the reader, never silently assumed or skipped over.
+
+**Key outputs**:
+- `reports/hipaa-compliance-<repo-slug>-YYYY-MM-DD.md` — Markdown report
+- `reports/hipaa-compliance-<repo-slug>-YYYY-MM-DD.pdf` — Quantal AI branded PDF, rendered by `document-generation`
+
+**Status scale** (independent of priority): Compliant → Non-Compliant → Partially Compliant → Not Verifiable From Code → Not Applicable (AI-only items when no AI/ML detected)
+
+**Priority scale** (for Non-Compliant/Partially-Compliant items only, reused from `code-review`): P0 (active exposure) → P1 (urgent) → P2 (clear gap) → P3 (hardening)
+
+**File structure**:
+```
+hipaa-compliance/
+├── SKILL.md                          ← Main instructions (5-step workflow)
+├── references/
+│   ├── compliance_checklist.md      ← Categories A–H code-verifiable checklist + Proposed/Regulatory Horizon bucket
+│   ├── finding_severity_guide.md    ← 4-state status, P0–P3 priority, PHI redaction rule, exact finding format
+│   └── manifest_mapping.md          ← Status → level, priority → title prefix, BAA section spec
+└── examples/
+    └── sample_compliance_report.md  ← Worked findings across all status values + BAA section
+```
+📄 [Read full instructions](hipaa-compliance/SKILL.md)
 
 ---
 
